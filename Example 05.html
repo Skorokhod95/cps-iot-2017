@@ -1,0 +1,51 @@
+<!doctype html>
+ <meta charset = utf8>
+ <!DOCTYPE html>
+ <html>
+     <head>
+         <title>
+             Работа лампочки с кнопки
+         </title>
+         <style>
+           .b1 {
+            background: lime; /* Синий цвет фона */ 
+            color: white; /* Белые буквы */ 
+            }
+  </style>
+     </head>
+     <body>
+         
+        <form action="handler.php">
+       <p><input type="button" value="Обычная кнопка">
+       <input type="button" class="b1" value="Синяя кнопка" onClick=on()></p>
+          </form>
+        <button id="buttonOn" onClick="on()">On</button>
+        <button id="buttonOff" onClick="off()">Off</button>
+        
+        <br>
+        <button id="buttonOn2" onClick="on2()">On 2</button>
+        <button id="buttonOff2" onClick="off2()">Off 2</button>
+         
+         <br> 
+         <script type="text/javascript" src="/socket.io/socket.io.js"></script>
+         <script type="text/javascript">
+             var socket = io.connect("172.16.22.224:8080");
+             function on() {
+                 socket.emit("commandToArduino",1);
+             }
+             function off() {
+                 socket.emit("commandToArduino",0);
+             }
+             function on2 () {
+                socket.emit("commandToArduino", 3);
+            }
+
+            function off2 () {
+                socket.emit("commandToArduino", 2);
+            }
+         </script> 
+     
+     </body>
+     
+     
+ </html>

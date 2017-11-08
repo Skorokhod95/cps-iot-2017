@@ -1,0 +1,70 @@
+<!doctype html>
+ <meta charset = utf8>
+ <!DOCTYPE html>
+ <html>
+     <head>
+         <title>
+             Работа лампочки с кнопки
+         </title>
+     </head>
+     <body>
+         
+        
+         
+        <button id="buttonOn" onClick="on()">On</button>
+        <button id="buttonOff" onClick="off()">Off</button>
+        
+        <br>
+        <button id="buttonOn2" onClick="on2()">On 2</button>
+        <button id="buttonOff2" onClick="off2()">Off 2</button>
+        
+        <br>
+        <button id="buttonOn3" onClick="on3()">On 3</button>
+        <button id="buttonOff3" onClick="off3()">Off 3</button>
+        
+        <br>
+        <button id="buttonOn4" onClick="on4()">On 4</button>
+        <button id="buttonOff4" onClick="off4()">Off 4</button>
+         
+         <br> 
+         <script type="text/javascript" src="/socket.io/socket.io.js"></script>
+         <script type="text/javascript">
+             var socket1 = io.connect("172.16.22.224:8080");
+             var socket2 = io.connect("172.16.22.53:8080");
+            function on1 () {
+                socket1.emit("commandToArduino", 1);
+            }
+            
+            function off1 () {
+                socket1.emit("commandToArduino", 0);
+            }
+            
+            function on2 () {
+                socket1.emit("commandToArduino", 3);
+            }
+            
+            function off2 () {
+                socket1.emit("commandToArduino", 2);
+            }
+             
+            function on3 () {
+                socket2.emit("commandToArduino", 1);
+            }
+            
+            function off3 () {
+                socket2.emit("commandToArduino", 0);
+            }
+            
+            function on4 () {
+                socket2.emit("commandToArduino", 3);
+            }
+            
+            function off4 () {
+                socket2.emit("commandToArduino", 2);
+            }
+         </script> 
+     
+     </body>
+     
+     
+ </html>
