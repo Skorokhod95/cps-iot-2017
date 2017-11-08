@@ -1,0 +1,55 @@
+<!doctype html>
+ <meta charset = utf8>
+ <!DOCTYPE html>
+ <html>
+     <head>
+         <title>
+             Работа лампочки с кнопки
+         </title>
+     </head>
+     <body>
+         
+       <canvas height = 100; width=100; id="canvas"> </canvas>
+       
+       
+        <div id="print1"></div>
+        
+        <script type="text/javascript" src="/socket.io/socket.io.js"></script>
+        
+        <script type="text/javascript">
+         "use strict"; // in order to use clasess
+         
+        var divElement = document.getElementById("print1"); // variable for div object where the values will be printed (logged)
+         
+        function log(msg) {
+            divElement.innerHTML += "<div>" + msg + "</div>"; // we print it to div
+        }
+        
+        var canvas  = document.getElementById('canvas'),
+        context = canvas.getContext('2d');
+        
+        
+        var socket = io.connect("172.16.22.224:8080");
+         
+        socket.on("messageToClient", function (msg){
+           log(msg); // add msg
+           if (msg=="Value = 1") {
+                context.fillStyle = "green";
+                context.fillRect(10, 10, 100, 100);
+           }
+           if (msg=="Value = 0") {
+                context.fillStyle = "orange";
+                context.fillRect(10, 10, 100, 100);
+           }
+        });
+        
+        socket.on("disconnect", function(){
+            log("Disconnected from the server"); // we print status of disconn. to div
+        });
+        
+        </script>
+        
+     </body>
+     
+     
+ </html>
