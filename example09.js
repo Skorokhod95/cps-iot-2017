@@ -1,22 +1,3 @@
-class LogDiv {
-    constructor(divId, numberOfLinesBeforeScroll) {
-        this.divElement = document.getElementById(divId); // name of div where values will be printed
-        this.numberOfLinesBeforeScroll = numberOfLinesBeforeScroll; // number of lines which print before scroll
-        this.linesPrintCounter = 0;
-    }
-
-    log(msg) { // function for printout of the messages with scroll functionality
-        var node=document.createElement("tr"); // we create the variable node as the a table row (tr)
-        var textnode=document.createTextNode(this.linesPrintCounter + " | " + msg); // we create element with the text adding the counter
-        node.appendChild(textnode); // adding text to "node", i.e. table row
-        this.divElement.insertBefore(node, this.divElement.childNodes[0]); // inserting into variable node
-        if (this.linesPrintCounter > this.numberOfLinesBeforeScroll-1) { // if the lines are more than limit -> start with scroll
-            this.divElement.removeChild(this.divElement.childNodes[this.numberOfLinesBeforeScroll]); // we remove the oldest printout
-        }
-        this.linesPrintCounter++; // increasing the number of printouts
-    }
-}
-
 var http = require("http").createServer(handler);
 var io = require("socket.io").listen(http); // socket.io for permanent connection between server and client
 var fs = require("fs"); //var for file system
@@ -33,7 +14,7 @@ var board = new firmata.Board("/dev/ttyACM0", function(){ // ACM Abstract Contro
 
 
 function handler (req,res) {
-    fs.readFile(__dirname+"/example07.html",
+    fs.readFile(__dirname+"/example09.html",
     function(err,data) {
         if (err) {
             res.writeHead(500,{"Content-Type":"text/plain"});
@@ -47,19 +28,30 @@ function handler (req,res) {
 
 http.listen(8080);
 
-var divPrint1; // variable for div object where the values will be printed (logged)
-divPrint1 = new LogDiv("print1", 10);
-
+var clientIpAddress=0;
 var sendValueViaSocket =function(){};
 
 board.on("ready", function() {
     io.sockets.on("connection", function(socket) {
         console.log("Socket id: "+socket.id);
-        socket.emit("messageToClient","Srv connected, board OK");
+        // print of IP adresses, ports, ip family
+        clientIpAddress = socket.request.socket.remoteAddress;
+        io.sockets.emit("messageToClient", "socket.request.socket.remoteAddress: " + socket.request.socket.remoteAddress);
+        // ::ffff:192.168.254.1 is ipv6 address
+        // in Chrome we enter: http://[::ffff:192.168.254.131]:8080 -> http://[::ffff:c0a8:fe83]:8080
+        io.sockets.emit("messageToClient", "socket.request.connection._peername.family: " + socket.request.connection._peername.family);
+        io.sockets.emit("messageToClient", "socket.request.connection._peername.port: " + socket.request.connection._peername.port);
+        io.sockets.emit("messageToClient", "socket.id: " + socket.id);
+        // extract ipv4 address ->
+        var idx = clientIpAddress.lastIndexOf(':');
+        var address4;
+        if (~idx && ~clientIpAddress.indexOf('.')) address4 = clientIpAddress.slice(idx + 1);
+        io.sockets.emit("messageToClient", "ipv4 address: " + socket.request.socket.remoteAddress);
+        io.sockets.emit("messageToClient", "Client data ----------------------------->");
         
         
         sendValueViaSocket =function(value) {
-           // io.sockets.emit("messageToClient", "Value = " + value);
+            io.sockets.emit("messageToClient", "Value = " + value);
            // divPrint1.log(value);
         }
         
@@ -91,7 +83,7 @@ board.on("ready", function() {
             }
     
             last_sent = last_value;
-        }, 50); // execute after 50ms
+        }, 750); // execute after 750ms
                     
         last_value = value; // this is read from pin 2 many times per s
                     

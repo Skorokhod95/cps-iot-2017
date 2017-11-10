@@ -17,9 +17,18 @@
          "use strict"; // in order to use clasess
          
         var divElement = document.getElementById("print1"); // variable for div object where the values will be printed (logged)
+        var numberOfLinesBeforeScroll = 10;
+        var linesPrintCounter = 0;
          
         function log(msg) {
-            divElement.innerHTML += "<div>" + msg + "</div>"; // we print it to div
+            var node=document.createElement("tr"); // we create the variable node as the a table row (tr)
+            var textnode=document.createTextNode(linesPrintCounter + " | " + msg); // we create element with the text adding the counter
+            node.appendChild(textnode); // adding text to "node", i.e. table row
+            divElement.insertBefore(node, divElement.childNodes[0]); // inserting into variable node
+            if (linesPrintCounter > numberOfLinesBeforeScroll-1) { // if the lines are more than limit -> start with scroll
+                divElement.removeChild(divElement.childNodes[numberOfLinesBeforeScroll]); // we remove the oldest printout
+            }
+            linesPrintCounter++; // increasing the number of printouts
         }
         
         var socket = io.connect("172.16.22.224:8080");
