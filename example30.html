@@ -10,19 +10,28 @@
 
 <html>
 <head>
-    <title>Govorno upravljanje</title>
+    <title>Speech control</title>
 </head>
 
 <style>
-body { font-family: courier}
+body {font-family: courier}
 </style>        
     
+<div id="interimResults" style="border-style:dotted; border-color:#c3c3c3; padding:10px; font-size:24px; font-color:#00ff00; width:477px; text-align:center;">
+interimResult
+</div>
+
+<div id="finalResults" style="border-style:dotted; border-color:#c3c3c3; padding:10px; font-size:24px; font-color:#00ff00; width:477px; text-align:center;">
+finalResults
+</div>
+
 <div id="speech" style="border-style:dotted; border-color:#c3c3c3; padding:10px; font-size:24px; font-color:#00ff00; width:477px; text-align:center;">
 Press button START for speech input.
 </div>
+
     
 <div class="right">
-  <button id="start_button" onclick="startButton(event)">Start</button>
+  <button id="start_button" onclick="startButton(event)" style="height: 65px; width: 162px; font-size:24px;">Start</button>
 </div>
 <div id="results">
   <span id="final_span"></span>
@@ -35,9 +44,9 @@ Press button START for speech input.
 <!-- ******************************************************************************************** -->                
 <br></br>
 
-<button id="buttonLeft" onClick="left()" style="height: 162px; width: 162px; font-size:35px;">GO</button>
-<button id="buttonCenter" onClick="center()" style="height: 162px; width: 162px; font-size:35px;">STOP</button>
-<button id="buttonRight" onClick="right()" style="height: 162px; width: 162px; font-size:35px;">BACK</button>    
+<button id="buttonLeft" onClick="left()" style="height: 162px; width: 162px; font-size:35px;">LEFT</button>
+<button id="buttonCenter" onClick="center()" style="height: 162px; width: 162px; font-size:35px;">CENTER</button>
+<button id="buttonRight" onClick="right()" style="height: 162px; width: 162px; font-size:35px;">RIGHT</button>    
 
 <br></br>
 </p>    
@@ -47,28 +56,22 @@ Press button START for speech input.
 
 <body>
     
-<div class = "izpisRazred" id="izpis"></div>
-
-<br>
-
-<div id="output"></div>
-
 <script src="/socket.io/socket.io.js"></script>
 
 <script>
-    
-var output = document.getElementById('izpis');
-var stevec = 0;
 
-function ReplaceContentInContainer(id,content) { // za zamenjavo vsebine div-a
+var lastResult;
+
+var final_span = document.getElementById("final_span");
+var interim_span = document.getElementById("interim_span");
+    
+function ReplaceContentInContainer(id, content) { // for replacing the div content
     var container = document.getElementById(id);
     container.innerHTML = content;
 }    
     
-// JavaScript, ki bo uporabljen na strani klienta zapišemo tu
-var socket = io.connect("172.16.22.224:8080"); 
-
-var output    = document.getElementById('output');
+// get the socket.io library from the server
+var socket = io.connect("172.16.22.224:8080", {secure: true}); 
 
 function left () {
   socket.emit("left", 1);
@@ -132,10 +135,6 @@ if (!('webkitSpeechRecognition' in window)) {
 
 var final_trs;
 
-//setTimeout(function(){recognition.stop(); recognition.start(); log("ZAGNANA razpoznava");}, 3000); // po treh sekundah ustavimo in poženemo razpoznavo
-//setTimeout(function(){recognition.stop(); log("STOP");}, 10000);
-//setTimeout(function(){recognition.stop(); log("ZAGNANA razpoznava po 12s");}, 12000);
-
   recognition.onresult = function(event) {
     var interim_transcript = '';
     // interim_transcript += event.results[i][0].transcript;
@@ -143,49 +142,50 @@ var final_trs;
       if (event.results[i].isFinal) {
         final_transcript += event.results[i][0].transcript;
         final_trs = event.results[i][0].transcript;
-    interim_transcript += event.results[i][0].transcript;
-        //tempx = event.results[i][0].transcript; 
-        //log(event.results[i][0].transcript);
+        ReplaceContentInContainer("finalResults", final_trs);
+        interim_transcript += event.results[i][0].transcript;
       } else {
         interim_transcript += event.results[i][0].transcript;
       }
     } 
 
-    ReplaceContentInContainer("speech", interim_transcript);
+    ReplaceContentInContainer("interimResults", interim_transcript);
 
         // *********************************************************************
-        // STOP
+        // here we enter our commands
+        // *********************************************************************  
+ 
+        // *********************************************************************
+        // LEFT
         // *********************************************************************    
-        if(interim_transcript == "stop" || interim_transcript == " stop" || interim_transcript == "break" || interim_transcript == " break" || interim_transcript == "house" || interim_transcript == "how's" || interim_transcript == " how's" || interim_transcript == " house" || interim_transcript == "Red Sox" || interim_transcript == " Red Sox")
-        {
-            socket.emit("center", 1);
-        };
-        // *********************************************************************
-        // Go
-        // *********************************************************************
-        if(interim_transcript == "go" || interim_transcript == " go" || interim_transcript == "forward" || interim_transcript == " forward" || interim_transcript == "start" || interim_transcript == " start") // ker napravimo premor med govorom moramo upoštevati tudi presledek+1, t.j. " 1"
+        if(interim_transcript == "left" || interim_transcript == " left" || interim_transcript == "last" || interim_transcript == " last" || interim_transcript == " let" || interim_transcript == "let" || interim_transcript == "Lyft" || interim_transcript == " Lyft" || interim_transcript == "lift" || interim_transcript == " lift") // since the pause is made during the speech, the space should also be considered, i.e. +1, t.j. " 1"
         {
             socket.emit("left", 1);
         };
         // *********************************************************************
-        // Back
+        // CENTER
         // *********************************************************************
-        if(interim_transcript == "back" || interim_transcript == " back" || interim_transcript == "beck" || interim_transcript == " beck" || interim_transcript == "Beck" || interim_transcript == " Beck") // ker napravimo premor med govorom moramo upoštevati tudi presledek+1, t.j. " 1"
+                if(interim_transcript == "center" || interim_transcript == " center" || interim_transcript == "Center" || interim_transcript == " Center" || interim_transcript == "centre" || interim_transcript == " centre" || interim_transcript == "Santa" || interim_transcript == " Santa" || interim_transcript == "send" || interim_transcript == " send") // since the pause is made during the speech, the space should also be considered, i.e. +1, t.j. " 1"
+        {
+            socket.emit("center", 1);
+        };
+        // *********************************************************************
+        // RIGHT
+        // *********************************************************************
+        if(interim_transcript == "right" || interim_transcript == " right") // since the pause is made during the speech, the space should also be considered, i.e. +1, t.j. " 1"
         {
             socket.emit("right", 1);
         };
 
-  }; // End of recognition.on.result
-}
+        // *********************************************************************
+        // end of entering commands part
+        // *********************************************************************    
 
-function upgrade() {
+    }; // End of recognition.on.result
+} // End of else (if we have webkitSpeechRecognition in window object, i.e. a good version of Chrome)
+
+function upgrade() { // function to allert the user, that upgrade is needed
     ReplaceContentInContainer("speech", 'You have to upgrade Chrome to version 25 of higher');
-}
-
-var two_line = /\n\n/g;
-var one_line = /\n/g;
-function linebreak(s) {
-  return s.replace(two_line, '<p></p>').replace(one_line, '<br>');
 }
 
 function startButton(event) {

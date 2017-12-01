@@ -63,6 +63,12 @@ Kd: <input id="Kd3" value="0.23" size = "5" />
 <button id="buttonStartControlAlgorithm4" onClick="startControlAlgorithm4()">Start Ctrl Alg4</button>
 <button id="buttonStopControlAlgorithm" onClick="stopControlAlgorithm()">Stop Ctrl Alg</button>
 
+<p></p>
+
+<button id="+" onClick="plus()">+</button>
+<button id="-" onClick="minus()">-</button>
+
+<p></p>
 
 <div id="divForStaticPrint"> </div>
 <p></p>
@@ -200,6 +206,15 @@ var functionValue = 0;
 
 
 var socket = io.connect("172.16.22.224:8080"); // connect via socket
+
+
+function plus() {
+    socket.emit("plus");
+}
+
+function minus() {
+    socket.emit("minus");
+}
 
 
 function startControlAlgorithm1 () {

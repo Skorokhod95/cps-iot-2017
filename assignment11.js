@@ -52,6 +52,8 @@ var board = new firmata.Board("/dev/ttyACM0", function(){ // ACM Abstract Contro
     board.pinMode(2, board.MODES.OUTPUT); // direction of DC motor
     board.pinMode(3, board.MODES.PWM); // PWM of motor i.e. speed of rotation
     board.pinMode(4, board.MODES.OUTPUT); // direction DC motor
+    console.log("Enabling Push Button on pin 2");
+    board.pinMode(8, board.MODES.INPUT);
 });
 
 function controlAlgorithm (parameters) {
@@ -169,7 +171,7 @@ function stopControlAlgorithm () {
 };
 
 function handler (req,res) {
-    fs.readFile(__dirname+"/example24.html",
+    fs.readFile(__dirname+"/assignment11.html",
     function(err,data) {
         if (err) {
             res.writeHead(500,{"Content-Type":"text/plain"});
@@ -238,6 +240,14 @@ board.on("ready", function() {
     board.analogRead(1, function(value) {
         actualValue = value; // continuous read of pin A1
     });
+    
+    board.digitalRead(8, function(value) {
+        if (value == 1) {
+            stopControlAlgorithm ();
+        }
+        
+    });
+
     
     sendValueViaSocket = function (value) {
     io.sockets.emit("messageToClient", value);

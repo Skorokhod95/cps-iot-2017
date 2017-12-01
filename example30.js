@@ -1,10 +1,23 @@
+/*********************************************************************        
+University of Maribor ************************************************
+Faculty of Organizational Sciences ***********************************
+Cybernetics & Decision Support Systems Laboratory ********************
+Andrej Škraba ********************************************************
+*********************************************************************/
+
+//The connection should be secure, i.e. https - don't forget to put [s] in the Chrome address i.e. https://172...
+//Therefore, the certificate files should be generated in Linux terminal (in the cps-iot directory):
+//sudo openssl genrsa -out privatekey.pem 1024
+//sudo openssl req -new -key privatekey.pem -out certrequest.csr
+//sudo openssl x509 -req -in certrequest.csr -signkey privatekey.pem -out certificate.pem
+//This will generate two files, privatekey.pem and certificate.pem on the disc in the cps-iot directory. 
+
 var firmata = require("firmata");
 
 var board = new firmata.Board("/dev/ttyACM0",function(){
-    console.log("Priključitev na Arduino");
-    console.log("Firmware: " + board.firmware.name + "-" + board.firmware.version.major + "." + board.firmware.version.minor); // izpišemo verzijo Firmware
-    console.log("Omogočimo pine");
-    board.pinMode(13, board.MODES.OUTPUT);    
+    console.log("Connection to Arduino");
+    console.log("Enabling pins");
+    board.pinMode(13, board.MODES.OUTPUT); // enable pin 13 for turning the LED on and off
 });
 
 var fs  = require("fs");
@@ -14,74 +27,48 @@ var options = {
   cert: fs.readFileSync('certificate.pem')
 };
 
-var https = require("https").createServer(options, handler) // tu je pomemben argument "handler", ki je kasneje uporabljen -> "function handler (req, res); v tej vrstici kreiramo server! (http predstavlja napo aplikacijo - app)
+var https = require("https").createServer(options, handler) // here the argument "handler" is needed, which is used latter on -> "function handler (req, res); in this line, we create the server! (https is object of our app)
   , io  = require("socket.io").listen(https, { log: false })
   , url = require("url");
 
-var send404 = function(res) {
-    res.writeHead(404);
-    res.write("404");
-    res.end();
-}
-//process.setMaxListeners(0); 
-
-//********************************************************************************************************
-// Simple routing ****************************************************************************************
-//********************************************************************************************************
-function handler (req, res) { // handler za "response"; ta handler "handla" le datoteko index.html
-    var path = url.parse(req.url).pathname; // parsamo pot iz url-ja
-    
-    switch(path) {
-    
-    case ('/') : // v primeru default strani
-
+function handler(req, res) {
     fs.readFile(__dirname + "/example30.html",
-    function (err, data) { // callback funkcija za branje tekstne datoteke
+    function (err, data) {
         if (err) {
-            res.writeHead(500);
-            return res.end("Napaka pri nalaganju strani pwmbutton...html");
+            res.writeHead(500, {"Content-Type": "text/plain"});
+            return res.end("Error loading html page.");
         }
-        
     res.writeHead(200);
     res.end(data);
-    });
-     
-    break;    
-            
-    default: send404(res);
-            
-    }
+    })
 }
-//********************************************************************************************************
-//********************************************************************************************************
-//********************************************************************************************************
 
-https.listen(8080); // določimo na katerih vratih bomo poslušali | vrata 80 sicer uporablja LAMP | lahko določimo na "router-ju" (http je glavna spremenljivka, t.j. aplikacija oz. app)
+https.listen(8080);  // determine on which port we will listen | port 80 is usually used by LAMP | This could be determined on the router (http is our main object, i.e.e app)
 
-console.log("Use (S) httpS! - System Start - Use (S) httpS!"); // na konzolo zapišemo sporočilo (v terminal)
+console.log("Use (S) httpS! - System Start - Use (S) httpS!"); // we print into the console that in the Chrome browser, the httpS (S!=Secure) should be used i.e. https://...
 
-var sendDataToClient = 1; // flag to send data to the client
+board.on("ready", function() {
 
-var STARTctrlFW = 0; // flag for control algorithm start
-
-io.sockets.on("connection", function(socket) {  // od oklepaja ( dalje imamo argument funkcije on -> ob 'connection' se prenese argument t.j. funkcija(socket) 
-                                                // ko nekdo pokliče IP preko "browser-ja" ("browser" pošlje nekaj node.js-u) se vzpostavi povezava = "connection" oz.
-                                                // je to povezava = "connection" oz. to smatramo kot "connection"
-                                                // v tem primeru torej želi client nekaj poslati (ko nekdo z browserjem dostopi na naš ip in port)
-                                                // ko imamo povezavo moramo torej izvesti funkcijo: function (socket)
-                                                // pri tem so argument podatki "socket-a" t.j. argument = socket
-                                                // ustvari se socket_id
+io.sockets.on("connection", function(socket) {  // from the parentesis ( on we have an argument of function -> at "connection" the argument is conveyed, i.e. function(socket)
+                                                // when somebody calls an IP over browser (this means that browser sends something to node.js) the "connection" is established
+                                                // so each time when browser request something from the server the connection is established    
+                                                // in this case, the client wants to send something (when somebody access our server over IP and port)
+                                                // when the connection is established, we have to execute the function : function(socket)    
+                                                // here the data of the socket is in the argument, i.e. argument=socket
+                                                // the unique socket_id is created
     
-    socket.on("left", function(data) { // ko je socket ON in je posredovan preko connection-a: ukazArduinu (t.j. ukaz: išči funkcijo ukazArduinu)
-        board.digitalWrite(13, board.HIGH); // na pinu 3 zapišemo vrednost HIGH
+    socket.on("left", function(data) { // so we listen to the socket when the connecton is established .on("connection"...), and we wait for the message "left"
+        board.digitalWrite(13, board.HIGH); // if we hear the message "left" we write HIGH value on pin 13
     });
     
-	socket.on("center", function(data) {
-        board.digitalWrite(13, board.LOW); // na pinu 3 zapišemo vrednost HIGH
+    socket.on("center", function(data) {
+        board.digitalWrite(13, board.LOW);
     });
     
-    socket.on("right", function(data) { // ko je socket ON in je posredovan preko connection-a: ukazArduinu (t.j. ukaz: išči funkcijo ukazArduinu)
-        board.digitalWrite(13, board.HIGH); // na pinu 3 zapišemo vrednost HIGH
+    socket.on("right", function(data) {
+        board.digitalWrite(13, board.HIGH);
     });
 
 });
+    
+}); // end of board.on ready
